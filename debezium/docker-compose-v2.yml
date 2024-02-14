@@ -1,4 +1,11 @@
 version: "3.5"
+
+networks:
+  middleware:
+
+volumes:
+  kafka-logs:
+
 services:
   zookeeper:
     image: quay.io/debezium/zookeeper:${DEBEZIUM_VERSION}
@@ -6,45 +13,75 @@ services:
       - 2181:2181
       - 2888:2888
       - 3888:3888
+    networks:
+      - middleware
+
   kafka:
-    image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
+    image: confluentinc/cp-kafka
+    #container_name: kafka-kraft-1
+    #hostname: kafka-kraft-1
     ports:
-      - 9092:9092
-    links:
-      - zookeeper
+      - "9092:9092"
     environment:
-      ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_JMX_PORT: 9997
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka0 -Dcom.sun.management.jmxremote.rmi.port=9997
-      KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka0:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://kafka0:29092,CONTROLLER://kafka0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-  mysql:
-    image: quay.io/debezium/example-mysql:${DEBEZIUM_VERSION}
-    ports:
-     - 3306:3306
-    environment:
-      MYSQL_ROOT_PASSWORD: debezium
-      MYSQL_USER: mysqluser
-      MYSQL_PASSWORD: mysqlpw
-      TZ: "America/Lima"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_BROKER_ID: 1
+      KAFKA_ELECTION_COORDINATOR_URL: "PLAINTEXT://kafka:9092"
+      KAFKA_LOG_DIRS: "/kafka-logs"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-logs:/kafka-logs
+    networks:
+      - middleware
+
+  #kafka:
+  #  image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
+  #  ports:
+  #    - 9092:9092
+  #  #links:
+  #  #  - zookeeper
+  #  environment:
+  #    KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  #    KAFKA_CFG_LISTENERS: PLAINTEXT://:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://:9093
+  #    KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #    KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+  #    KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+  #    #
+  #    #ZOOKEEPER_CONNECT: zookeeper:2181
+  #    #KAFKA_BROKER_ID: 1
+  #    #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+  #    #KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+  #    ##KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #    ##KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  #    ##KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  #    ##KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  #    ##KAFKA_JMX_PORT: 9997
+  #    ##KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka -Dcom.sun.management.jmxremote.rmi.port=9997
+  #    #KAFKA_PROCESS_ROLES: 'broker,controller'
+  #    #KAFKA_NODE_ID: 1
+  #    #KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+  #    ##KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+  #    ##KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+  #    #KAFKA_CONTROLLER_LISTENER_NAMES: 'kafka'
+  #    ##KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+  #  networks:
+  #    - middleware
+  #mysql:
+  #  image: quay.io/debezium/example-mysql:${DEBEZIUM_VERSION}
+  #  ports:
+  #   - 3306:3306
+  #  environment:
+  #    MYSQL_ROOT_PASSWORD: debezium
+  #    MYSQL_USER: mysqluser
+  #    MYSQL_PASSWORD: mysqlpw
+  #    TZ: "America/Lima"
   connect:
     image: quay.io/debezium/connect:${DEBEZIUM_VERSION}
     ports:
       - 8083:8083
-    links:
-      - kafka
+    #links:
+    #  - kafka
     # - mysql
     environment:
       BOOTSTRAP_SERVERS: kafka:9092
@@ -52,17 +89,24 @@ services:
       CONFIG_STORAGE_TOPIC: my_connect_configs
       OFFSET_STORAGE_TOPIC: my_connect_offsets
       STATUS_STORAGE_TOPIC: my_connect_statuses
+    networks:
+      - middleware
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: provectuslabs/kafka-ui:53a6553765a806eda9905c43bfcfe09da6812035
     ports:
       - "8080:8080"
-    links:
-      - kafka
+    #links:
+    #  - kafka
     environment:
       DYNAMIC_CONFIG_ENABLED: true
+      #
+      # Cluster 0
+      #
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_METRICS_PORT: 9997
       #KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schemaregistry0:8085
       #KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: first
       #KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect0:8083
+    networks:
+      - middleware
