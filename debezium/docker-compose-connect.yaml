@@ -1,0 +1,14 @@
+version: "3.5"
+
+services:
+  connect:
+    image: quay.io/debezium/connect:2.4
+    ports:
+      - "8083:8083"
+    environment:
+      GROUP_ID: 1 
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offsets
+      STATUS_STORAGE_TOPIC: my_connect_statuses
+      REST_HOST_NAME: 0.0.0.0
+      BOOTSTRAP_SERVERS: 172.17.8.220:9092
