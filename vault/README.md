@@ -5,9 +5,13 @@ export VAULT_TOKEN=hvs.uLgB01seI1fahvoEpxoSmv6b
 export VAULT_ADDR=http://172.17.8.220:8200
 ```
 
+## Habilitación del servicio
+
 ```sh
 vault secrets enable rabbitmq
 ```
+
+## Configuración de conexión con RabbitMQ
 
 ```sh
 vault write \
@@ -23,10 +27,26 @@ Se obtiene como resultado exitoso lo siguiente.
 Success! Data written to: rabbitmq/config/connection
 ```
 
+## Definición del Role
+
 ```sh
 vault write rabbitmq/roles/app \
-  vhosts='{"/":{"write": ".*", "read": ".*"}}'
+  vhosts='{"default":{"configure": ".*", "write": ".*", "read": ".*"}}' \
+  vhost_topics='{"default": {"amq.topic": {"write": ".*", "read": ".*"}}}'
 ```
+
+  tags='administrator'
+```
+
+## Establecimiento de tiempo de vigencia de credenciales
+
+> se expresan en segundos. El ttl = 24 horas * 60 minutos * 60 segundos = 86400 y max_ttl para 7 dias
+
+```sh
+vault write rabbitmq/config/lease ttl=86400 max_ttl=604800
+```
+
+## Generar credencial
 
 ```sh
 vault read rabbitmq/creds/app

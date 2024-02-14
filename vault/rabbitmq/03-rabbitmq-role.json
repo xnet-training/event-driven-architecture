@@ -1,0 +1,5 @@
+{
+    "name": "app",
+    "tags": "administrator,management",
+    "vhost": "{\"default\": {\"configure\":\".*\", \"write\":\".*\", \"read\": \".*\"}}"
+}

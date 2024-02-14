@@ -1,0 +1,5 @@
+{
+    "connection_uri": "http://172.17.8.220:15672",
+    "username": "admin",
+    "password": "admin"
+}
