@@ -21,7 +21,7 @@
     "schema.history.internal.kafka.topic": "schema-changes.partyreferencedata",
     "transforms" : "outbox",
     "transforms.outbox.type" : "io.debezium.transforms.outbox.EventRouter",
-    "transforms.outbox.route.topic.replacement" : "topic.businessevents",
+    "transforms.outbox.route.topic.replacement" : "${routedByValue}.events",
     "transforms.outbox.table.fields.additional.placement" : "type:header:eventType"
   }
 }

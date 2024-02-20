@@ -10,18 +10,13 @@
     "database.server.id": "184054",
     "database.name": "partyreferencedata", 
     "topic.prefix": "partyreferencedata",
-    "table.whitelist": "tb_outbox",  
-    "heartbeat.interval.ms": 10000,
-    "offset.flush.interval.ms": 60000,
-    "max.batch.size": 1000,
-    "max.queue.size": 10000,
-    "debezium.source.name": "my-source",
-    "debezium.embedded.engine.history.store.type": "debezium",
-    "schema.history.internal.kafka.bootstrap.servers": "172.17.8.220:9092",
+    "table.whitelist": "tb_outpost",  
+    "database.include.list": "partyreferencedata",
+    "schema.history.internal.kafka.bootstrap.servers": "172.17.8.220:9092",  
     "schema.history.internal.kafka.topic": "schema-changes.partyreferencedata",
     "transforms" : "outbox",
     "transforms.outbox.type" : "io.debezium.transforms.outbox.EventRouter",
-    "transforms.outbox.route.topic.replacement" : "topic.businessevents",
+    "transforms.outbox.route.topic.replacement" : "${routedByValue}.events",
     "transforms.outbox.table.fields.additional.placement" : "type:header:eventType"
   }
 }

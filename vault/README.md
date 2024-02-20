@@ -29,12 +29,20 @@ Success! Data written to: rabbitmq/config/connection
 
 ## Definición del Role
 
+
+### Role para microservicio
+
 ```sh
 vault write rabbitmq/roles/app \
   vhosts='{"default":{"configure": ".*", "write": ".*", "read": ".*"}}' \
   vhost_topics='{"default": {"amq.topic": {"write": ".*", "read": ".*"}}}'
 ```
 
+#### Role para Administrador
+
+```sh
+vault write rabbitmq/roles/admin \
+  vhosts='{"default":{"configure": ".*", "write": ".*", "read": ".*"}}' \
   tags='administrator'
 ```
 
