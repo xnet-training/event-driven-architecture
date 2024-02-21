@@ -1,4 +1,9 @@
 
+# Iniciar Debezium
+
+```sh
+docker compose -f docker-compose-v3.yml
+```
 
 # Configuraicon
 
@@ -33,6 +38,14 @@ curl -X DELETE http://0.0.0.0:28083/connectors/partyreferencedata-connector
 
 ## Prueba de la Configuracion
 
+> El password es `secr3t!`
+
+```sh
+docker exec -it dev-environment-db-1 mysql -u microservice -p
+```
+
 ```sql
-insert into tb_outpost values('LoanRejected','1234567','{"account": "1234-3234-2334-2345"}');
+insert partyreferencedata.tb_outbox values('11111111-1111-1111-11111111-1111',
+  'ConsumerLoan','1234567890','ConsumerLoanApproved',
+  '{"CustomerId": "1234567666", "Ammount": 6}');
 ```
